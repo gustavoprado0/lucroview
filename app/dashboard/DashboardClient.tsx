@@ -255,7 +255,6 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
         </div>
       </div>
 
-      {/* ── Modal Nova Transação ── */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-white/20 rounded-2xl w-full max-w-md shadow-2xl">
@@ -269,7 +268,6 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
             </div>
 
             <div className="p-6 space-y-4">
-              {/* Tipo */}
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { value: "income", label: "💰 Receita" },
@@ -291,7 +289,6 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                 ))}
               </div>
 
-              {/* Valor */}
               <div>
                 <label className="text-xs text-gray-400 mb-1.5 block">Valor (R$)</label>
                 <input
@@ -303,7 +300,6 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                 />
               </div>
 
-              {/* Categoria */}
               <div>
                 <label className="text-xs text-gray-400 mb-1.5 block">Categoria</label>
                 <select
@@ -315,7 +311,6 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                 </select>
               </div>
 
-              {/* Descrição */}
               <div>
                 <label className="text-xs text-gray-400 mb-1.5 block">Descrição (opcional)</label>
                 <input
@@ -327,7 +322,6 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                 />
               </div>
 
-              {/* Data */}
               <div>
                 <label className="text-xs text-gray-400 mb-1.5 block">Data</label>
                 <input
