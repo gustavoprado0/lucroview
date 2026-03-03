@@ -1,4 +1,3 @@
-// app/api/transactions/route.ts
 import { prisma } from "@/app/src/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
