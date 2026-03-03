@@ -33,7 +33,7 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <main className="w-full">
+    <main>
       <DashboardClient user={{ id: user.id, name: user.name, email: user.email }} transactions={serialized} />
     </main>
   );
