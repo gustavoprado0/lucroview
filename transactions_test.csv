@@ -1,0 +1,3 @@
+type,amount,category,description,date
+income,1000,Salário,Salário Março,2026-03-01
+expense,200,Alimentação,Almoço,2026-03-02

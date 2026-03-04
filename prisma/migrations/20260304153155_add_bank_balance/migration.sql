@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "bankBalance" DOUBLE PRECISION DEFAULT 0;
