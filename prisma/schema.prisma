@@ -1,9 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,22 +8,36 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  createdAt    DateTime      @default(now())
+
+  bankBalance  Float?        @default(0) 
+
   transactions Transaction[]
+  alerts       Alert[]
 }
 
 model Transaction {
-  id        String   @id @default(uuid())
-  type      String
-  amount    Float
-  category  String
-  date      DateTime
+  id          String   @id @default(uuid())
+  type        String
+  amount      Float
+  category    String
+  date        DateTime
   description String?
+  imported    Boolean  @default(false)   // NOVO: identifica transações de importação
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Alert {
+  id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+  message   String
   createdAt DateTime @default(now())
+  read      Boolean  @default(false)
 }
