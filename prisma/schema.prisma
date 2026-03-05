@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,6 +17,7 @@ model User {
 
   transactions Transaction[]
   alerts       Alert[]
+  insights     FinancialInsight[]   // 👈 ADICIONE ISSO
 }
 
 model Transaction {
@@ -27,7 +27,7 @@ model Transaction {
   category    String
   date        DateTime
   description String?
-  imported    Boolean  @default(false)   // NOVO: identifica transações de importação
+  imported    Boolean  @default(false)
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
@@ -40,4 +40,14 @@ model Alert {
   message   String
   createdAt DateTime @default(now())
   read      Boolean  @default(false)
+}
+
+model FinancialInsight {
+  id        String   @id @default(uuid())
+  userId    String
+  score     Int
+  message   String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
