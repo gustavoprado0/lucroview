@@ -4,6 +4,7 @@ import { prisma } from "@/app/src/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
@@ -39,8 +40,16 @@ export async function POST(req: Request) {
       { expiresIn: "7d" }
     );
 
+    const cookieStore = await cookies();
+
+    cookieStore.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
     return NextResponse.json({
-      token,
       user: {
         id: user.id,
         name: user.name,
