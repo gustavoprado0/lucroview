@@ -32,7 +32,7 @@ export default async function DashboardPage() {
     orderBy: { date: "desc" },
   });
 
-  const serialized: Transaction[] = transactionsFromDb.map((tx: PrismaTransaction) => ({
+  const serialized: Transaction[] = transactionsFromDb.map((tx) => ({
     id: tx.id,
     date: tx.date.toISOString(),
     description: tx.description ?? null,
