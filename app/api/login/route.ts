@@ -1,6 +1,6 @@
 export const runtime = "nodejs";
 
-import { prisma } from "@/app/src/lib/prisma";
+import { prisma } from "@/src/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";

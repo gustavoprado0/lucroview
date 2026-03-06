@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/app/src/lib/prisma";
+import { prisma } from "@/src/lib/prisma";
 import { parse as csvParse } from "csv-parse/sync";
 import { parse as parseOFX } from "ofx-parser";
 import pdfParse from "pdf-parse";

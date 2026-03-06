@@ -1,4 +1,4 @@
-import { prisma } from "@/app/src/lib/prisma";
+import { prisma } from "@/src/lib/prisma";
 
 export async function generateFinancialInsight(userId: string) {
   const now = new Date();

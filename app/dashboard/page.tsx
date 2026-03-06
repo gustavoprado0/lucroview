@@ -1,4 +1,4 @@
-import { prisma } from "@/app/src/lib/prisma";
+import { prisma } from "@/src/lib/prisma";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken";

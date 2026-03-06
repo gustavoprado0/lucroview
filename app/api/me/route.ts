@@ -1,8 +1,8 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/app/src/lib/prisma";
-import { verifyToken } from "@/app/src/lib/auth";
+import { prisma } from "@/src/lib/prisma";
+import { verifyToken } from "@/src/lib/auth";
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
