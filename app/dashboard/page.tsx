@@ -31,7 +31,7 @@ export default async function DashboardPage() {
     orderBy: { date: "desc" },
   });
 
-  const serialized: Transaction[] = transactionsFromDb.map((tx) => ({
+  const serialized: Transaction[] = transactionsFromDb.map((tx: typeof transactionsFromDb[number]) => ({
     id: tx.id,
     date: tx.date.toISOString(),
     description: tx.description ?? null,
