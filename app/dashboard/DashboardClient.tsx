@@ -13,12 +13,11 @@ import { ExpenseCategoryChart } from "@/components/charts/ExpenseCategoryChart";
 import { IncomeCategoryChart } from "@/components/charts/IncomeCategoryChart";
 import { TransactionsTable } from "@/components/transactions/TransactionsTable";
 import CreateTransactionModal from "@/components/transactions/TransactionModal";
-import { TransactionForm } from "@/types/transactionForm";
 import ForecastCard from "@/components/ForecastCard";
 import ImportTransactionsButton from "@/components/transactions/ImportTransactionsButton";
-import { Transaction } from "@/types/transaction";
 import { FinancialInsights } from "@/components/financial-insights/FinancialInsights";
 import EmptyDashboard from "@/components/EmptyDashboard";
+import { Transaction, TransactionForm } from "@/types/transaction";
 
 type User = {
     id: string;
