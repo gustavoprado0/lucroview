@@ -30,16 +30,14 @@ export function FinancialInsights({
 
   async function loadInsight() {
     try {
-      const res = await fetch("/api/insights", {
-        credentials: "include",
-      });
+      const res = await fetch("/api/insights", { credentials: "include" });
 
       if (!res.ok) {
         setLoading(false);
         return;
       }
 
-      const data = await res.json();
+      const data: Insight = await res.json();
       setInsight(data);
     } catch (err) {
       console.error(err);
@@ -51,12 +49,20 @@ export function FinancialInsights({
   async function generateInsight() {
     setLoading(true);
 
-    await fetch("/api/insights", {
-      method: "POST",
-      credentials: "include",
-    });
+    try {
+      await fetch("/api/insights", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ balance, totalIncome, totalExpense }),
+      });
 
-    await loadInsight();
+      await loadInsight();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -65,7 +71,7 @@ export function FinancialInsights({
 
   if (loading) {
     return (
-      <div className="p-6 rounded-xl">
+      <div className="p-6 rounded-xl bg-white border">
         Carregando insights...
       </div>
     );
@@ -105,7 +111,7 @@ export function FinancialInsights({
         fmt={fmt}
       />
 
-      <SmartInsightCard balance={balance} />
+      <SmartInsightCard message={insight.message} />
     </div>
   );
 }

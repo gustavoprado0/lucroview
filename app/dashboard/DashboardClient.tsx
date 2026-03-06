@@ -31,7 +31,7 @@ type Props = {
     transactions: Transaction[];
 };
 
-const CATEGORIES = ["Alimentação", "Transporte", "Saúde", "Educação", "Lazer", "Moradia", "Salário", "Freelance", "Investimento", "Outros"];
+const CATEGORIES = ["Alimentação", "Transporte", "Saúde", "Educação", "Lazer", "Moradia", "Salário", "Freelance", "Investimento", "Vendas", "Outros"];
 const LOW_BALANCE_THRESHOLD = 500;
 const PAGE_SIZE = 15;
 
@@ -39,6 +39,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
     const router = useRouter();
     const [transactions, setTransactions] = useState<Transaction[]>(initial || []);
     const [showModal, setShowModal] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [pageInput, setPageInput] = useState(page.toString());
@@ -193,59 +194,71 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
         router.push("/login");
     };
 
-    const createAlert = (message: string) => {
-        toast.warn(message, {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "light",
-        });
-    };
-
     const handleSubmit = async () => {
         if (!form.amount || isNaN(Number(form.amount))) return;
+
         setLoading(true);
+
         try {
+            const payload = {
+                ...form,
+                amount: parseFloat(form.amount),
+                userId: user.id,
+            };
+
             const res = await fetch("/api/transactions", {
-                method: "POST",
+                method: editingId ? "PUT" : "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    ...form,
-                    amount: parseFloat(form.amount),
-                    userId: user.id,
-                }),
+                body: JSON.stringify(
+                    editingId ? { ...payload, id: editingId } : payload
+                ),
             });
+
             if (res.ok) {
-                const created = await res.json();
+                const data = await res.json();
 
-                const newTransaction: Transaction = {
-                    ...created,
-                    type: form.type as "income" | "expense",
-                };
-
-                setTransactions(prev => [newTransaction, ...prev]);
-
-                setPage(1);
-                setShowModal(false);
-
-                setForm({
-                    type: "expense",
-                    amount: "",
-                    category: "Outros",
-                    description: "",
-                    date: new Date().toISOString().split("T")[0],
-                });
-
-                if (form.type === "expense" && parseFloat(form.amount) > 2000) {
-                    createAlert(`Gasto alto detectado: ${fmt(parseFloat(form.amount))} em ${form.category}`);
+                if (editingId) {
+                    setTransactions(prev =>
+                        prev.map(t => (t.id === editingId ? data : t))
+                    );
+                } else {
+                    setTransactions(prev => [data, ...prev]);
                 }
+
+                setEditingId(null);
+                setShowModal(false);
             }
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDelete = async (id: string) => {
+        const confirmDelete = confirm("Deseja deletar esta transação?");
+        if (!confirmDelete) return;
+
+        const res = await fetch(`/api/transactions?id=${id}`, {
+            method: "DELETE",
+        });
+
+        if (res.ok) {
+            setTransactions(prev => prev.filter(t => t.id !== id));
+            toast.success("Transação removida");
+        }
+    };
+
+    const handleEdit = (tx: Transaction) => {
+        setEditingId(tx.id);
+
+        setForm({
+            type: tx.type,
+            amount: tx.amount.toString(),
+            category: tx.category,
+            description: tx.description || "",
+            date: new Date(tx.date).toISOString().split("T")[0],
+        });
+
+        setShowModal(true);
     };
 
     const forecast = useMemo(() => {
@@ -330,7 +343,6 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                         />
 
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-
                             <FinancialInsights
                                 balance={balance}
                                 totalIncome={totalIncome}
@@ -374,6 +386,8 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                             setPage={setPage}
                             handlePageSubmit={handlePageSubmit}
                             fmt={fmt}
+                            onDelete={handleDelete}
+                            onEdit={handleEdit}
                         />
 
                     </>

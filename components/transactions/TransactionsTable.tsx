@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 
 import {
   Card,
@@ -42,6 +42,8 @@ type Props = {
   setPage: (fn: (p: number) => number) => void;
   handlePageSubmit: () => void;
   fmt: (value: number) => string;
+  onDelete: (id: string) => void;
+  onEdit: (tx: Transaction) => void;
 };
 
 export function TransactionsTable({
@@ -54,6 +56,8 @@ export function TransactionsTable({
   setPage,
   handlePageSubmit,
   fmt,
+  onDelete,
+  onEdit
 }: Props) {
   return (
     <Card>
@@ -74,7 +78,8 @@ export function TransactionsTable({
                 <TableHead>Descrição</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -100,13 +105,33 @@ export function TransactionsTable({
                   </TableCell>
 
                   <TableCell
-                    className={`text-right font-semibold ${tx.type === "income"
-                        ? "text-green-600"
-                        : "text-red-600"
+                    className={`font-semibold ${tx.type === "income"
+                      ? "text-green-600"
+                      : "text-red-600"
                       }`}
                   >
                     {tx.type === "income" ? "+" : "-"}
                     {fmt(tx.amount)}
+                  </TableCell>
+                  <TableCell className="text-right flex gap-2 justify-end">
+
+                    <Button
+                      className="cursor-pointer"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => onEdit(tx)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+
+                    <Button
+                      className="bg-white hover:bg-gray-300 border cursor-pointer"
+                      size="icon"
+                      onClick={() => onDelete(tx.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </Button>
+
                   </TableCell>
                 </TableRow>
               ))}

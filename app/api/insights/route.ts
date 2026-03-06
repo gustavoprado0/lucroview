@@ -6,7 +6,14 @@ interface JwtPayload {
   userId: string;
 }
 
-function calculateScore(transactions: any[]) {
+interface Transaction {
+  amount: number;
+  type: "income" | "expense";
+  category: string;
+  date: Date;
+}
+
+function calculateScore(transactions: Transaction[]) {
   const income = transactions
     .filter(t => t.type === "income")
     .reduce((s, t) => s + t.amount, 0);
@@ -19,18 +26,9 @@ function calculateScore(transactions: any[]) {
 
   let score = 0;
 
-  /* ===============================
-     1️⃣ Saúde do saldo (30)
-  =============================== */
-  if (balance > 0) {
-    score += 30;
-  } else if (balance > -500) {
-    score += 15;
-  }
+  if (balance > 0) score += 30;
+  else if (balance > -500) score += 15;
 
-  /* ===============================
-     2️⃣ Taxa de economia (20)
-  =============================== */
   if (income > 0) {
     const savingsRate = (balance / income) * 100;
 
@@ -39,9 +37,6 @@ function calculateScore(transactions: any[]) {
     else if (savingsRate >= 5) score += 8;
   }
 
-  /* ===============================
-     3️⃣ Concentração por categoria (20)
-  =============================== */
   const expenseByCategory: Record<string, number> = {};
 
   transactions
@@ -51,22 +46,32 @@ function calculateScore(transactions: any[]) {
         (expenseByCategory[t.category] || 0) + t.amount;
     });
 
-  const highestCategory = Math.max(...Object.values(expenseByCategory), 0);
+  const highestCategory =
+    Object.values(expenseByCategory).length > 0
+      ? Math.max(...Object.values(expenseByCategory))
+      : 0;
 
   if (expense > 0) {
     const concentration = (highestCategory / expense) * 100;
 
     if (concentration < 40) score += 20;
     else if (concentration < 60) score += 10;
+    else score += 5;
   }
 
-  /* ===============================
-     4️⃣ Tendência últimos meses (20)
-  =============================== */
+  // 4. Bônus: despesas muito baixas em relação à receita
+  if (income > 0 && expense < income * 0.05) {
+    score += 15;
+  } else if (income > 0 && expense < income * 0.15) {
+    score += 10;
+  } else if (income > 0 && expense < income * 0.30) {
+    score += 5;
+  }
+
   const months: Record<string, number> = {};
 
   transactions.forEach(tx => {
-    const key = tx.date.toISOString().slice(0, 7);
+    const key = new Date(tx.date).toISOString().slice(0, 7);
 
     if (!months[key]) months[key] = 0;
 
@@ -74,7 +79,8 @@ function calculateScore(transactions: any[]) {
     else months[key] -= tx.amount;
   });
 
-  const monthBalances = Object.values(months);
+  const sortedMonths = Object.keys(months).sort();
+  const monthBalances = sortedMonths.map(m => months[m]);
 
   if (monthBalances.length >= 2) {
     const last = monthBalances[monthBalances.length - 1];
@@ -84,20 +90,13 @@ function calculateScore(transactions: any[]) {
     else if (last > 0) score += 10;
   }
 
-  /* ===============================
-     5️⃣ Segurança de caixa (10)
-  =============================== */
+  // 6. Reserva
   if (balance > 1000) score += 10;
   else if (balance > 0) score += 5;
 
-  /* ===============================
-     Limite 0–100
-  =============================== */
   score = Math.max(0, Math.min(100, Math.round(score)));
 
-  /* ===============================
-     Mensagem dinâmica
-  =============================== */
+  // MENSAGENS CORRIGIDAS (antes estavam trocadas)
   let message = "";
 
   if (score >= 85) {
@@ -107,15 +106,12 @@ function calculateScore(transactions: any[]) {
   } else if (score >= 50) {
     message = "Atenção: seus gastos estão pressionando seu caixa.";
   } else {
-    message = "Risco financeiro elevado. Reavalie despesas urgentemente.";
+    message = "Risco financeiro elevado. Reavalie suas despesas.";
   }
 
   return { score, message };
 }
 
-/* ===============================
-   GET - Buscar Insight
-=============================== */
 export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get("token")?.value;
@@ -134,19 +130,15 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    if (!insight) {
-      return NextResponse.json(null);
-    }
-
-    return NextResponse.json(insight);
+    return NextResponse.json(insight ?? null);
   } catch (err) {
-    return NextResponse.json({ error: "Erro ao buscar insight" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erro ao buscar insight" },
+      { status: 500 }
+    );
   }
 }
 
-/* ===============================
-   POST - Gerar Insight
-=============================== */
 export async function POST(req: NextRequest) {
   try {
     const token = req.cookies.get("token")?.value;
@@ -164,7 +156,9 @@ export async function POST(req: NextRequest) {
       where: { userId: decoded.userId },
     });
 
-    const { score, message } = calculateScore(transactions);
+    const { score, message } = calculateScore(
+      transactions as Transaction[]
+    );
 
     const insight = await prisma.financialInsight.create({
       data: {
@@ -176,6 +170,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(insight);
   } catch (err) {
-    return NextResponse.json({ error: "Erro ao gerar insight" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erro ao gerar insight" },
+      { status: 500 }
+    );
   }
 }

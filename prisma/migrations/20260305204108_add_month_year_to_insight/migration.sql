@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "FinancialInsight" ADD COLUMN     "month" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "year" INTEGER NOT NULL DEFAULT 0;
