@@ -1,12 +1,11 @@
 import { prisma } from "@/src/lib/prisma";
-import { Transaction } from "@prisma/client";
 
 export async function generateFinancialInsight(userId: string) {
   const now = new Date();
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
 
-  const transactions: Transaction[] = await prisma.transaction.findMany({
+  const transactions = await prisma.transaction.findMany({
     where: {
       userId,
       date: {
@@ -17,11 +16,11 @@ export async function generateFinancialInsight(userId: string) {
   });
 
   const totalIncome = transactions
-    .filter((t: Transaction) => t.type === "income")
+    .filter((t) => t.type === "income")
     .reduce((acc, t) => acc + t.amount, 0);
 
   const totalExpense = transactions
-    .filter((t: Transaction) => t.type === "expense")
+    .filter((t) => t.type === "expense")
     .reduce((acc, t) => acc + t.amount, 0);
 
   let score = 100;
