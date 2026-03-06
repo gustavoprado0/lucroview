@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken";
 import DashboardClient from "./DashboardClient";
 import { Transaction } from "@/types/transaction";
-import { Transaction as PrismaTransaction } from "@prisma/client";
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
