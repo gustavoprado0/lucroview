@@ -1,10 +1,10 @@
-// app/src/app/dashboard/DashboardPage.tsx
 import { prisma } from "@/app/src/lib/prisma";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken";
 import DashboardClient from "./DashboardClient";
 import { Transaction } from "@/types/transaction";
+import { Transaction as PrismaTransaction } from "@prisma/client";
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
@@ -13,6 +13,7 @@ export default async function DashboardPage() {
   if (!token) redirect("/login");
 
   let userId: string;
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
     userId = decoded.userId;
@@ -20,7 +21,10 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
   if (!user) redirect("/login");
 
   const transactionsFromDb = await prisma.transaction.findMany({
@@ -28,19 +32,23 @@ export default async function DashboardPage() {
     orderBy: { date: "desc" },
   });
 
-  const serialized: Transaction[] = transactionsFromDb.map((tx) => ({
+  const serialized: Transaction[] = transactionsFromDb.map((tx: PrismaTransaction) => ({
     id: tx.id,
     date: tx.date.toISOString(),
-    description: tx.description ?? null, 
+    description: tx.description ?? null,
     category: tx.category,
-    type: tx.type === "income" ? "income" : "expense", 
+    type: tx.type === "income" ? "income" : "expense",
     amount: tx.amount,
   }));
 
   return (
     <main>
       <DashboardClient
-        user={{ id: user.id, name: user.name, email: user.email }}
+        user={{
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        }}
         transactions={serialized}
       />
     </main>
