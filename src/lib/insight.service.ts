@@ -1,4 +1,5 @@
 import { prisma } from "@/src/lib/prisma";
+import { Transaction } from "@/types/transaction";
 
 export async function generateFinancialInsight(userId: string) {
   const now = new Date();
@@ -13,15 +14,15 @@ export async function generateFinancialInsight(userId: string) {
         lte: new Date(year, month, 0, 23, 59, 59),
       },
     },
-  });
+  }) as Transaction[];
 
   const totalIncome = transactions
-    .filter((t) => t.type === "income")
-    .reduce((acc, t) => acc + t.amount, 0);
+    .filter((t: Transaction) => t.type === "income")
+    .reduce((acc: number, t: Transaction) => acc + t.amount, 0);
 
   const totalExpense = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((acc, t) => acc + t.amount, 0);
+    .filter((t: Transaction) => t.type === "expense")
+    .reduce((acc: number, t: Transaction) => acc + t.amount, 0);
 
   let score = 100;
   let messages: string[] = [];
