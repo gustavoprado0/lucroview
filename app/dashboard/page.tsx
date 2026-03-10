@@ -45,7 +45,7 @@ export default async function DashboardPage() {
       <DashboardClient
         user={{
           id: user.id,
-          name: user.name,
+          name: user.name ?? 'Usuário',
           email: user.email,
         }}
         transactions={serialized}

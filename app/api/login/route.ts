@@ -15,18 +15,18 @@ export async function POST(req: Request) {
       where: { email },
     });
 
-    if (!user) {
+    if (!user || !user.password) {
       return NextResponse.json(
-        { error: "Credenciais inválidas" },
+        { error: "Usuário ou senha inválidos" },
         { status: 401 }
       );
     }
-
+    
     const passwordMatch = await bcrypt.compare(
       password,
       user.password
     );
-
+    
     if (!passwordMatch) {
       return NextResponse.json(
         { error: "Credenciais inválidas" },
