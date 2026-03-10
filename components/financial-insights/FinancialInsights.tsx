@@ -1,16 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import SpendingProgress from "./SpendingProgress";
 import SmartInsightCard from "./SmartInsightCard";
 import FinancialHealthCard from "./FinancialHealthCard";
-import { Card, CardContent } from "../ui/card";
-import { Button } from "../ui/button";
-
-interface Insight {
-  score: number;
-  message: string;
-}
 
 type Props = {
   balance: number;
@@ -19,82 +11,39 @@ type Props = {
   fmt: (value: number) => string;
 };
 
-export function FinancialInsights({
-  balance,
-  totalIncome,
-  totalExpense,
-  fmt,
-}: Props) {
-  const [insight, setInsight] = useState<Insight | null>(null);
-  const [loading, setLoading] = useState(true);
+function calculateInsight(balance: number, totalIncome: number, totalExpense: number) {
+  let score = 0;
 
-  async function loadInsight() {
-    try {
-      const res = await fetch("/api/insights", { credentials: "include" });
+  if (balance > 0) score += 30;
+  else if (balance > -500) score += 15;
 
-      if (!res.ok) {
-        setLoading(false);
-        return;
-      }
-
-      const data: Insight = await res.json();
-      setInsight(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  if (totalIncome > 0) {
+    const savingsRate = (balance / totalIncome) * 100;
+    if (savingsRate >= 30) score += 20;
+    else if (savingsRate >= 15) score += 15;
+    else if (savingsRate >= 5) score += 8;
   }
 
-  async function generateInsight() {
-    setLoading(true);
+  if (totalIncome > 0 && totalExpense < totalIncome * 0.05) score += 15;
+  else if (totalIncome > 0 && totalExpense < totalIncome * 0.15) score += 10;
+  else if (totalIncome > 0 && totalExpense < totalIncome * 0.30) score += 5;
 
-    try {
-      await fetch("/api/insights", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ balance, totalIncome, totalExpense }),
-      });
+  if (balance > 1000) score += 10;
+  else if (balance > 0) score += 5;
 
-      await loadInsight();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  score = Math.max(0, Math.min(100, Math.round(score)));
 
-  useEffect(() => {
-    loadInsight();
-  }, []);
+  let message = "";
+  if (score >= 85) message = "Excelente gestão financeira. Continue assim.";
+  else if (score >= 70) message = "Boa saúde financeira, mas há espaço para melhorar.";
+  else if (score >= 50) message = "Atenção: seus gastos estão pressionando seu caixa.";
+  else message = "Risco financeiro elevado. Reavalie suas despesas.";
 
-  if (loading) {
-    return (
-      <div className="p-6 rounded-xl bg-white border">
-        Carregando insights...
-      </div>
-    );
-  }
+  return { score, message };
+}
 
-  if (!insight) {
-    return (
-      <Card className="p-6 rounded-xl border bg-white">
-        <CardContent>
-          <h2 className="text-lg font-semibold mb-4">
-            Nenhum insight gerado ainda
-          </h2>
-
-          <Button
-            onClick={generateInsight}
-            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg cursor-pointer"
-          >
-            Gerar Insight do Mês
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+export function FinancialInsights({ balance, totalIncome, totalExpense, fmt }: Props) {
+  const { message } = calculateInsight(balance, totalIncome, totalExpense);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -104,14 +53,12 @@ export function FinancialInsights({
         totalExpense={totalExpense}
         fmt={fmt}
       />
-
       <SpendingProgress
         totalExpense={totalExpense}
         totalIncome={totalIncome}
         fmt={fmt}
       />
-
-      <SmartInsightCard message={insight.message} />
+      <SmartInsightCard message={message} />
     </div>
   );
 }
