@@ -23,19 +23,36 @@ const handler = NextAuth({
         password: {},
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-          select: { id: true, name: true, email: true, password: true },
-        });
-
-        if (!user || !user.password) return null;
-
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) return null;
-
-        return { id: user.id, name: user.name, email: user.email };
+        console.log("🔐 authorize chamado:", credentials?.email);
+        
+        if (!credentials?.email || !credentials?.password) {
+          console.log("❌ credentials faltando");
+          return null;
+        }
+      
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            select: { id: true, name: true, email: true, password: true },
+          });
+      
+          console.log("👤 user encontrado:", user ? "sim" : "não");
+      
+          if (!user || !user.password) {
+            console.log("❌ user não encontrado ou sem senha");
+            return null;
+          }
+      
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+          console.log("🔑 senha válida:", isValid);
+      
+          if (!isValid) return null;
+      
+          return { id: user.id, name: user.name, email: user.email };
+        } catch (err) {
+          console.error("💥 erro no authorize:", err);
+          return null;
+        }
       },
     }),
   ],
