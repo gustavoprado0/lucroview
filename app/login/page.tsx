@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -117,7 +115,12 @@ export default function LoginPage() {
               )}
             </Button>
 
-            <button onClick={() => signIn("google")}>
+            <button
+              onClick={async () => {
+                await signOut({ redirect: false });
+                signIn("google");
+              }}
+            >
               Entrar com Google
             </button>
           </form>
