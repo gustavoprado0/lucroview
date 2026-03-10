@@ -8,6 +8,10 @@ import bcrypt from "bcrypt";
 const handler = NextAuth({
   adapter: PrismaAdapter(prisma),
 
+  session: {
+    strategy: "database",
+  },
+
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
