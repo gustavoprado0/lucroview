@@ -1,14 +1,13 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/src/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // SEM adapter
   session: {
-    strategy: "jwt", // ← DEVE ser jwt
+    strategy: "jwt",
   },
   providers: [
     GoogleProvider({
@@ -42,9 +41,32 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        // Cria ou atualiza usuário Google no banco manualmente
+        await prisma.user.upsert({
+          where: { email: user.email! },
+          update: { name: user.name, image: user.image },
+          create: {
+            email: user.email!,
+            name: user.name,
+            image: user.image,
+          },
+        });
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+      }
+      // Para Google, busca o id real do banco
+      if (!token.id && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email as string },
+        });
+        if (dbUser) token.id = dbUser.id;
       }
       return token;
     },
