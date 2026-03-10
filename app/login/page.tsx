@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,27 +25,15 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
+  
     try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        callbackUrl: "/dashboard",
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Erro ao fazer login");
-        return;
-      }
-
-      document.cookie = `token=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
-      localStorage.setItem("user", JSON.stringify(data.user));
-      router.push("/dashboard");
-
     } catch {
-      setError("Erro de conexão. Tente novamente.");
+      setError("Erro ao fazer login");
     } finally {
       setLoading(false);
     }
@@ -51,14 +41,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-900 flex items-center justify-center p-4">
-      {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-emerald-500 opacity-10 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-teal-400 opacity-10 blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md">
-        {/* Logo & Brand */}
         <div className="text-center mb-8">
           <Image
             src="/lucroview.png"
@@ -68,7 +56,6 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Card */}
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-8">
           <h2 className="text-xl font-semibold text-white mb-1">Bem-vindo de volta</h2>
           <p className="text-emerald-300 text-sm mb-6">Entre na sua conta para continuar</p>
@@ -112,7 +99,7 @@ export default function LoginPage() {
               />
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
               className="w-full mt-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-700 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-400/30 text-sm flex items-center justify-center gap-2"
@@ -128,7 +115,16 @@ export default function LoginPage() {
               ) : (
                 "Entrar"
               )}
-            </button>
+            </Button>
+
+            <Button
+              onClick={() =>
+                signIn("google", { callbackUrl: "/dashboard" })
+              }
+              className="bg-white border px-4 py-2 rounded"
+            >
+              Entrar com Google
+            </Button>
           </form>
 
           <p className="text-center text-emerald-300 text-sm mt-6">
