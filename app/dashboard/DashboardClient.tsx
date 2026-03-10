@@ -23,6 +23,7 @@ type User = {
     id: string;
     name: string;
     email: string;
+    image?: string | null;
 };
 
 type Props = {
@@ -55,6 +56,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
     const balance = totalIncome - totalExpense;
     const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
     const paginatedTransactions = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    
 
     useEffect(() => {
         setPageInput(page.toString());
@@ -292,6 +294,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
             <ToastContainer />
 
             <NavbarDashboard
+                userImage={user.image}
                 userName={user.name}
                 onLogout={handleLogout}
             />

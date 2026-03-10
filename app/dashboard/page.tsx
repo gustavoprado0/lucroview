@@ -43,6 +43,7 @@ export default async function DashboardPage() {
           id: user.id,
           name: user.name ?? "Usuário",
           email: user.email,
+          image: user.image ?? null, 
         }}
         transactions={serialized}
       />
