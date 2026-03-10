@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { signIn, signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    document.cookie = "token=; path=/; max-age=0";
-  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -24,118 +20,70 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    try {
-      await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        callbackUrl: "/dashboard",
-      });
-    } catch {
-      setError("Erro ao fazer login");
-    } finally {
-      setLoading(false);
+    const result = await signIn("credentials", {
+      redirect: false,
+      email: form.email,
+      password: form.password,
+    });
+
+    if (result?.error) {
+      setError("E-mail ou senha incorretos");
+    } else {
+      window.location.href = result?.url || "/dashboard";
     }
+
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-900 flex items-center justify-center p-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-emerald-500 opacity-10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-teal-400 opacity-10 blur-3xl" />
-      </div>
-
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <Image
-            src="/lucroview.png"
-            alt="LucroView"
-            width={500}
-            height={100}
-          />
+          <Image src="/lucroview.png" alt="LucroView" width={500} height={100} />
         </div>
 
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-8">
           <h2 className="text-xl font-semibold text-white mb-1">Bem-vindo de volta</h2>
           <p className="text-emerald-300 text-sm mb-6">Entre na sua conta para continuar</p>
 
-          {error && (
-            <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/40 text-red-300 text-sm rounded-xl px-4 py-3 mb-5">
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-              </svg>
-              {error}
-            </div>
-          )}
+          {error && <p className="text-red-400 mb-4">{error}</p>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-emerald-200 mb-1.5">E-mail</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                required
-                placeholder="seu@email.com"
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition text-sm"
-              />
-            </div>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="E-mail"
+              className="w-full p-3 rounded-xl bg-white/10 text-white placeholder-white/30"
+              required
+            />
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Senha"
+              className="w-full p-3 rounded-xl bg-white/10 text-white placeholder-white/30"
+              required
+            />
 
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-sm font-medium text-emerald-200">Senha</label>
-                <a href="#" className="text-xs text-emerald-400 hover:text-emerald-300 transition">Esqueceu a senha?</a>
-              </div>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                required
-                placeholder="••••••••"
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition text-sm"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-700 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-400/30 text-sm flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
-                  Entrando...
-                </>
-              ) : (
-                "Entrar"
-              )}
+            <Button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-emerald-500 text-white">
+              {loading ? "Entrando..." : "Entrar"}
             </Button>
-
-            <button
-              onClick={async () => {
-                await signOut({ redirect: false });
-                signIn("google");
-              }}
-            >
-              Entrar com Google
-            </button>
           </form>
 
-          <p className="text-center text-emerald-300 text-sm mt-6">
-            Não tem uma conta?{" "}
-            <Link href="/register" className="text-emerald-400 hover:text-white font-semibold transition">
-              Criar conta
-            </Link>
+          <Button
+            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            className="w-full py-3 mt-2 rounded-xl bg-white text-black"
+          >
+            Entrar com Google
+          </Button>
+
+          <p className="mt-4 text-center text-emerald-300">
+            Não tem conta? <Link href="/register" className="text-emerald-400">Criar conta</Link>
           </p>
         </div>
-
-        <p className="text-center text-emerald-600 text-xs mt-6">
-          © {new Date().getFullYear()} LucroView. Todos os direitos reservados.
-        </p>
       </div>
     </div>
   );
