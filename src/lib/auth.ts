@@ -1,14 +1,50 @@
-import jwt from "jsonwebtoken";
+import { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/src/lib/prisma";
+import bcrypt from "bcrypt";
 
-export function verifyToken(token: string) {
-  try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET!
-    ) as { userId: string };
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
 
-    return decoded;
-  } catch {
-    return null;
-  }
-}
+  session: {
+    strategy: "database",
+  },
+
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: {},
+        password: {},
+      },
+
+      async authorize(credentials) {
+        const user = await prisma.user.findUnique({
+          where: { email: credentials?.email },
+        });
+
+        if (!user || !user.password) return null;
+
+        const valid = await bcrypt.compare(
+          credentials!.password,
+          user.password
+        );
+
+        if (!valid) return null;
+
+        return user;
+      },
+    }),
+  ],
+
+  pages: {
+    signIn: "/login",
+  },
+};

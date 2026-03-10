@@ -25,7 +25,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-  
+
     try {
       await signIn("credentials", {
         email: form.email,
@@ -117,14 +117,9 @@ export default function LoginPage() {
               )}
             </Button>
 
-            <Button
-              onClick={() =>
-                signIn("google", { callbackUrl: "/dashboard" })
-              }
-              className="bg-white border px-4 py-2 rounded"
-            >
+            <button onClick={() => signIn("google")}>
               Entrar com Google
-            </Button>
+            </button>
           </form>
 
           <p className="text-center text-emerald-300 text-sm mt-6">

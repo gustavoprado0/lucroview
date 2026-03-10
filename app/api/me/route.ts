@@ -2,37 +2,34 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma";
-import { verifyToken } from "@/src/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/src/lib/auth";
 
-export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
+export async function GET() {
+  const session = await getServerSession(authOptions);
 
-  if (!authHeader) {
+  if (!session?.user?.email) {
     return NextResponse.json(
-      { error: "Token não enviado" },
-      { status: 401 }
-    );
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  const decoded = verifyToken(token);
-
-  if (!decoded) {
-    return NextResponse.json(
-      { error: "Token inválido" },
+      { error: "Não autenticado" },
       { status: 401 }
     );
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: decoded.userId },
+    where: { email: session.user.email },
     select: {
       id: true,
       name: true,
       email: true,
     },
   });
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Usuário não encontrado" },
+      { status: 404 }
+    );
+  }
 
   return NextResponse.json(user);
 }
