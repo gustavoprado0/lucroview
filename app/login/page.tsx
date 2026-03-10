@@ -69,15 +69,16 @@ export default function LoginPage() {
               required
             />
 
-            <Button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-emerald-500 text-white">
+            <Button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-900 text-white cursor-pointer">
               {loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
 
           <Button
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-            className="w-full py-3 mt-2 rounded-xl bg-white text-black"
+            className="w-full py-3 mt-2 rounded-xl bg-white hover:bg-gray-200 text-black flex items-center gap-3 cursor-pointer"
           >
+            
             Entrar com Google
           </Button>
 
