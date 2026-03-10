@@ -19,20 +19,21 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
+  
     const result = await signIn("credentials", {
       redirect: false,
       email: form.email,
       password: form.password,
     });
-
+  
+    setLoading(false);
+  
     if (result?.error) {
       setError("E-mail ou senha incorretos");
-    } else {
-      window.location.href = result?.url || "/dashboard";
+      return;
     }
-
-    setLoading(false);
+  
+    window.location.replace("/dashboard");
   };
 
   return (
