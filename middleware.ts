@@ -6,9 +6,6 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ 
     req, 
     secret: process.env.NEXTAUTH_SECRET,
-    cookieName: req.headers.get("x-forwarded-proto") === "https" 
-      ? "__Secure-next-auth.session-token" 
-      : "next-auth.session-token",
   });
 
   const { pathname } = req.nextUrl;
