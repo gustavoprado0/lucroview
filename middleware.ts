@@ -1,14 +1,20 @@
-// middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
-  const { pathname } = request.nextUrl;
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ 
+    req, 
+    secret: process.env.NEXTAUTH_SECRET,
+    cookieName: req.headers.get("x-forwarded-proto") === "https" 
+      ? "__Secure-next-auth.session-token" 
+      : "next-auth.session-token",
+  });
 
-  // Sem token e tenta acessar página protegida → manda para login
+  const { pathname } = req.nextUrl;
+
   if (!token && pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   return NextResponse.next();

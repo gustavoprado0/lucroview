@@ -1,4 +1,3 @@
-// app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -10,20 +9,13 @@ const handler = NextAuth({
   adapter: PrismaAdapter(prisma),
   debug: true,
   session: {
-    strategy: "database", // salva sessões no banco
+    strategy: "jwt", // ← CRÍTICO: deve ser jwt para CredentialsProvider funcionar
   },
-
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "select_account consent",
-        },
-      },
     }),
-
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -31,34 +23,37 @@ const handler = NextAuth({
         password: {},
       },
       async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials?.email },
+          where: { email: credentials.email },
+          select: { id: true, name: true, email: true, password: true },
         });
 
         if (!user || !user.password) return null;
 
-        const valid = await bcrypt.compare(credentials!.password, user.password);
-        if (!valid) return null;
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) return null;
 
-        return user;
+        return { id: user.id, name: user.name, email: user.email };
       },
     }),
   ],
-
   pages: {
-    signIn: "/login", // sua página custom
+    signIn: "/login",
   },
-
   callbacks: {
-    async signIn({ user, account }) {
-      // Login via Google
-      if (account?.provider === "google") {
+    async jwt({ token, user, account }) {
+      if (user) {
+        token.id = user.id;
+      }
+      // Se for login Google, garante que a conta está vinculada
+      if (account?.provider === "google" && token.email) {
         const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
+          where: { email: token.email },
         });
-
         if (existingUser) {
-          // Vincula a conta Google à conta existente
+          token.id = existingUser.id;
           await prisma.account.upsert({
             where: {
               provider_providerAccountId: {
@@ -83,12 +78,16 @@ const handler = NextAuth({
           });
         }
       }
-
-      return true; // continua o login normalmente
+      return token;
     },
-
-    async redirect({ baseUrl }) {
-      return `${baseUrl}/dashboard`; // redireciona para o dashboard
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+    async redirect({ url, baseUrl }) {
+      return url.startsWith(baseUrl) ? url : `${baseUrl}/dashboard`;
     },
   },
 });
