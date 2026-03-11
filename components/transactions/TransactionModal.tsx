@@ -116,14 +116,16 @@ export default function CreateTransactionModal({
             }
           />
 
-          <Input
-            type="date"
-            value={form.date}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, date: e.target.value }))
-            }
-            className="w-full max-w-full min-w-0 bg-gray-100 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-          />
+          <div className="w-full overflow-hidden">
+            <Input
+              type="date"
+              value={form.date}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, date: e.target.value }))
+              }
+              className="w-full max-w-full min-w-0 bg-gray-100 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            />
+          </div>
         </div>
 
         <DialogFooter>
