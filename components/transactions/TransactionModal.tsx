@@ -66,13 +66,12 @@ export default function CreateTransactionModal({
                 setForm((f) => ({ ...f, type: opt.value as "income" | "expense" }))
               }
               className={`py-2.5 cursor-pointer rounded-xl text-sm font-medium transition border flex items-center justify-center gap-2
-              ${
-                form.type === opt.value
+              ${form.type === opt.value
                   ? opt.value === "income"
                     ? "bg-green-100 border-green-400 text-green-600"
                     : "bg-red-100 border-red-400 text-red-600"
                   : "border-gray-300 text-gray-700 hover:border-gray-400"
-              }`}
+                }`}
             >
               {opt.icon}
               {opt.label}
@@ -123,7 +122,7 @@ export default function CreateTransactionModal({
             onChange={(e) =>
               setForm((f) => ({ ...f, date: e.target.value }))
             }
-            className="w-full bg-gray-100 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            className="w-full max-w-full min-w-0 bg-gray-100 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
           />
         </div>
 
