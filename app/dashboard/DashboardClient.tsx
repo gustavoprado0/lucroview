@@ -66,18 +66,38 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
         description: "",
         date: "",
     };
+    const now = new Date();
+
+    const currentMonthTransactions = useMemo(() => {
+        return transactions.filter((t) => {
+            const d = new Date(t.date);
+
+            return (
+                d.getMonth() === now.getMonth() &&
+                d.getFullYear() === now.getFullYear()
+            );
+        });
+    }, [transactions]);
     const [form, setForm] = useState<TransactionForm>(initialForm);
-    const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
-    const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+    const totalIncome = currentMonthTransactions
+        .filter(t => t.type === "income")
+        .reduce((s, t) => s + t.amount, 0);
+    const totalExpense = currentMonthTransactions
+        .filter(t => t.type === "expense")
+        .reduce((s, t) => s + t.amount, 0);
     const balance = totalIncome - totalExpense;
     const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
     const paginatedTransactions = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const [pollingPaused, setPollingPaused] = useState(false);
+
+
+
 
     const handleCloseModal = () => {
         setShowModal(false);
         setEditingId(null);
         setForm(initialForm);
-      };
+    };
 
     useEffect(() => {
         setPageInput(page.toString());
@@ -97,6 +117,8 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
 
     useEffect(() => {
         const fetchTransactions = async () => {
+            if (pollingPaused) return; // <-- não busca durante importação
+
             try {
                 const res = await fetch(`/api/transactions?userId=${user.id}`);
                 const data = await res.json();
@@ -105,7 +127,6 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                         ...t,
                         type: t.type as "income" | "expense",
                     }));
-
                     setTransactions(normalized);
                 }
             } catch (err) {
@@ -117,7 +138,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
 
         const interval = setInterval(fetchTransactions, 5000);
         return () => clearInterval(interval);
-    }, [user.id]);
+    }, [user.id, pollingPaused]); // <-- adicione pollingPaused nas dependências
 
     // useEffect(() => {
     //     const message = "Seu caixa está quase no fim. Considere entradas de receita em breve.";
@@ -349,6 +370,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                             userId={user.id}
                             setTransactions={setTransactions}
                             setPage={setPage}
+                            setPollingPaused={setPollingPaused} // <-- novo prop
                         />
 
                     </div>

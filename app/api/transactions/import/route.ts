@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parse as csvParse } from "csv-parse/sync";
 import { parse as parseOFX } from "ofx-parser";
-import pdfParse from "pdf-parse";
 
 export const runtime = "nodejs";
 
@@ -26,7 +25,7 @@ function categorizeTransaction(description: string): string {
     }
   }
 
-  return "Outros"; // caso não encontre correspondência
+  return "Outros";
 }
 
 export async function POST(req: NextRequest) {
@@ -46,6 +45,7 @@ export async function POST(req: NextRequest) {
 
     // ================= PDF =================
     if (file.type === "application/pdf" || fileName.endsWith(".pdf")) {
+      const { default: pdfParse } = await import("pdf-parse");
       const buffer = Buffer.from(await file.arrayBuffer());
       const data = await pdfParse(buffer);
       const lines = data.text.split("\n");
@@ -54,10 +54,10 @@ export async function POST(req: NextRequest) {
       const headerYearMatch = data.text.match(/20\d{2}/);
       if (headerYearMatch) currentYear = parseInt(headerYearMatch[0]);
 
-      const monthMap: any = {
+      const monthMap: Record<string, string> = {
         JAN: "01", FEV: "02", MAR: "03", ABR: "04",
         MAI: "05", JUN: "06", JUL: "07", AGO: "08",
-        SET: "09", OUT: "10", NOV: "11", DEZ: "12"
+        SET: "09", OUT: "10", NOV: "11", DEZ: "12",
       };
 
       for (let i = 0; i < lines.length; i++) {
@@ -92,11 +92,12 @@ export async function POST(req: NextRequest) {
 
         if (!date || isNaN(date.getTime())) continue;
 
-        let description = trimmed.replace(rawAmount, "")
-                                 .replace(/\d{2}\/\d{2}\/\d{4}/, "")
-                                 .replace(/\d{2}\/\d{2}/, "")
-                                 .replace(/(\d{2})\s([A-Z]{3})/i, "")
-                                 .trim();
+        let description = trimmed
+          .replace(rawAmount, "")
+          .replace(/\d{2}\/\d{2}\/\d{4}/, "")
+          .replace(/\d{2}\/\d{2}/, "")
+          .replace(/(\d{2})\s([A-Z]{3})/i, "")
+          .trim();
 
         if (!description) continue;
 
@@ -115,7 +116,25 @@ export async function POST(req: NextRequest) {
     // ================= CSV =================
     else if (fileName.endsWith(".csv")) {
       const content = await file.text();
-      const records = csvParse(content, { columns: true, skip_empty_lines: true, bom: true });
+
+      // Validação: CSV real deve ter vírgula ou ponto-e-vírgula no cabeçalho
+      const firstLine = content.split("\n")[0] ?? "";
+      const looksLikeCSV = firstLine.includes(",") || firstLine.includes(";");
+
+      if (!looksLikeCSV) {
+        return NextResponse.json(
+          { error: "Arquivo não parece ser um CSV válido" },
+          { status: 400 }
+        );
+      }
+
+      const records = csvParse(content, {
+        columns: true,
+        skip_empty_lines: true,
+        bom: true,
+        relax_quotes: true,
+        relax_column_count: true,
+      });
 
       transactions = (records || [])
         .filter((r: any) => {
@@ -128,9 +147,15 @@ export async function POST(req: NextRequest) {
           const type = amount >= 0 ? "income" : "expense";
 
           const description =
-            r["Descrição"] ?? r["descricao"] ?? r["description"] ??
-            r["Histórico"] ?? r["historico"] ?? r["memo"] ??
-            r["lançamento"] ?? r["lancamento"] ?? "Importado CSV";
+            r["Descrição"] ??
+            r["descricao"] ??
+            r["description"] ??
+            r["Histórico"] ??
+            r["historico"] ??
+            r["memo"] ??
+            r["lançamento"] ??
+            r["lancamento"] ??
+            "Importado CSV";
 
           return {
             type,
@@ -148,10 +173,14 @@ export async function POST(req: NextRequest) {
     else if (fileName.endsWith(".ofx")) {
       const content = await file.text();
       const ofxData = parseOFX(content);
-      const ofxTransactions = ofxData.transactions ?? ofxData.statement?.transactions ?? [];
+      const ofxTransactions =
+        ofxData.transactions ?? ofxData.statement?.transactions ?? [];
 
       if (!ofxTransactions.length)
-        return NextResponse.json({ error: "Nenhuma transação válida encontrada no OFX" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Nenhuma transação válida encontrada no OFX" },
+          { status: 400 }
+        );
 
       transactions = ofxTransactions
         .filter((t: any) => t.amount !== undefined && t.date)
@@ -175,29 +204,48 @@ export async function POST(req: NextRequest) {
 
     // ================= Filtrando transações válidas =================
     transactions = transactions.filter(
-      (t) => !isNaN(t.amount) && t.amount > 0 && t.date instanceof Date && !isNaN(t.date.getTime())
+      (t) =>
+        !isNaN(t.amount) &&
+        t.amount > 0 &&
+        t.date instanceof Date &&
+        !isNaN(t.date.getTime())
     );
 
     if (!transactions.length)
-      return NextResponse.json({ error: "Nenhuma transação válida encontrada" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Nenhuma transação válida encontrada" },
+        { status: 400 }
+      );
 
     // ================= Salvando no banco =================
+    let createdCount = 0;
+
     for (const tx of transactions) {
       const exists = await prisma.transaction.findFirst({
-        where: { userId, amount: tx.amount, date: tx.date, description: tx.description },
+        where: {
+          userId,
+          amount: tx.amount,
+          date: tx.date,
+          description: tx.description,
+        },
       });
 
-      if (!exists) await prisma.transaction.create({ data: tx });
+      if (!exists) {
+        await prisma.transaction.create({ data: tx });
+        createdCount++;
+      }
     }
 
     return NextResponse.json({
       message: "Importação concluída com sucesso",
-      createdCount: transactions.length,
+      createdCount,
     });
-
   } catch (error: any) {
-    console.error("Erro ao importar:", error);
-    return NextResponse.json({ error: "Erro interno ao importar transações" }, { status: 500 });
+    console.error("Erro ao importar:", error?.message, error?.stack);
+    return NextResponse.json(
+      { error: error?.message ?? "Erro interno ao importar transações" },
+      { status: 500 }
+    );
   }
 }
 
@@ -205,8 +253,10 @@ export async function POST(req: NextRequest) {
 function parseAmount(value: string): number {
   if (!value) return 0;
   const v = value.toString().trim();
-  if (v.includes(",") && v.includes(".")) return parseFloat(v.replace(/\./g, "").replace(",", "."));
-  if (v.includes(",") && !v.includes(".")) return parseFloat(v.replace(",", "."));
+  if (v.includes(",") && v.includes("."))
+    return parseFloat(v.replace(/\./g, "").replace(",", "."));
+  if (v.includes(",") && !v.includes("."))
+    return parseFloat(v.replace(",", "."));
   return parseFloat(v);
 }
 

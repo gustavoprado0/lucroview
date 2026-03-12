@@ -145,7 +145,7 @@ export default function CreateTransactionModal({
                 onSelect={(date) =>
                   setForm((f) => ({
                     ...f,
-                    date: date ? date.toISOString() : "",
+                    date: date ? format(date, "yyyy-MM-dd") : "",
                   }))
                 }
               />

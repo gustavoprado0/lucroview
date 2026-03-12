@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         amount,
         category,
         description,
-        date: date ? new Date(date) : new Date(),
+        date: date ? new Date(date + "T00:00:00") : new Date(),
         userId,
       },
     });
