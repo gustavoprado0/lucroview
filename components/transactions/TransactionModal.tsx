@@ -1,6 +1,6 @@
 "use client";
 
-import { DollarSign, TrendingDown } from "lucide-react";
+import { CalendarIcon, DollarSign, TrendingDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,10 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Calendar } from "../ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 type FormType = {
   type: "income" | "expense";
@@ -120,16 +124,33 @@ export default function CreateTransactionModal({
             }
           />
 
-          <div className="w-full overflow-hidden">
-            <Input
-              type="date"
-              value={form.date}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, date: e.target.value }))
-              }
-              className="w-full max-w-full min-w-0 bg-gray-100 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-            />
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+
+                {form.date
+                  ? format(new Date(form.date), "PPP", { locale: ptBR })
+                  : "Selecionar data"}
+              </Button>
+            </PopoverTrigger>
+
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={form.date ? new Date(form.date) : undefined}
+                onSelect={(date) =>
+                  setForm((f) => ({
+                    ...f,
+                    date: date ? date.toISOString() : "",
+                  }))
+                }
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <DialogFooter>

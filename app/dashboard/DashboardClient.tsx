@@ -49,7 +49,6 @@ const INCOME_CATEGORIES = [
     "Outros"
 ];
 
-const LOW_BALANCE_THRESHOLD = 500;
 const PAGE_SIZE = 15;
 
 export default function DashboardClient({ user, transactions: initial }: Props) {
@@ -60,20 +59,25 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [pageInput, setPageInput] = useState(page.toString());
-    const [form, setForm] = useState<TransactionForm>({
+    const initialForm: TransactionForm = {
         type: "income",
         amount: "",
         category: "",
         description: "",
         date: "",
-    });
-
+    };
+    const [form, setForm] = useState<TransactionForm>(initialForm);
     const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
     const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
     const balance = totalIncome - totalExpense;
     const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
     const paginatedTransactions = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setEditingId(null);
+        setForm(initialForm);
+      };
 
     useEffect(() => {
         setPageInput(page.toString());
@@ -245,6 +249,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
 
                 setEditingId(null);
                 setShowModal(false);
+                setForm(initialForm);
             }
         } finally {
             setLoading(false);
@@ -415,7 +420,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
 
             <CreateTransactionModal
                 open={showModal}
-                setOpen={setShowModal}
+                setOpen={handleCloseModal}
                 form={form}
                 setForm={setForm}
                 loading={loading}
