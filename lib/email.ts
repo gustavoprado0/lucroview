@@ -10,10 +10,7 @@ const resend = new Resend(apiKey);
 
 export async function sendResetPasswordEmail(email: string, token: string) {
     try {
-        const baseUrl =
-            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-        const resetLink = `${baseUrl}/reset-password?token=${token}`;
+        const resetLink = `https://lucroview.com.br/reset-password?token=${token}`;
 
         const response = await resend.emails.send({
             from: "LucroView <suporte@lucroview.com.br>",
