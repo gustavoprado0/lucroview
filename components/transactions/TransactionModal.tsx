@@ -63,7 +63,11 @@ export default function CreateTransactionModal({
             <button
               key={opt.value}
               onClick={() =>
-                setForm((f) => ({ ...f, type: opt.value as "income" | "expense" }))
+                setForm((f) => ({
+                  ...f,
+                  type: opt.value as "income" | "expense",
+                  category: ""
+                }))
               }
               className={`py-2.5 cursor-pointer rounded-xl text-sm font-medium transition border flex items-center justify-center gap-2
               ${form.type === opt.value
@@ -95,13 +99,13 @@ export default function CreateTransactionModal({
               setForm((f) => ({ ...f, category: value }))
             }
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Categoria" />
+            <SelectTrigger className="w-full cursor-pointer">
+              <SelectValue className="cursor-pointer" placeholder="Categoria" />
             </SelectTrigger>
 
             <SelectContent>
               {categories.map((c) => (
-                <SelectItem key={c} value={c}>
+                <SelectItem className="cursor-pointer" key={c} value={c}>
                   {c}
                 </SelectItem>
               ))}
