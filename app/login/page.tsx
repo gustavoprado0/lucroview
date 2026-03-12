@@ -87,9 +87,12 @@ export default function LoginPage() {
             Entrar com Google
           </Button>
 
-          <p className="mt-4 text-center text-emerald-300">
-            Não tem conta? <Link href="/register" className="text-emerald-400">Criar conta</Link>
-          </p>
+          <div className="flex justify-between items-center">
+            <p className="mt-4 text-center text-white">
+              Não tem conta? <Link href="/register" className="text-emerald-400">Criar conta</Link>
+            </p>
+            <Link href="/forgot-password" className="mt-4 text-center text-emerald-300">Esqueceu sua senha? </Link>
+          </div>
         </div>
       </div>
     </div>
