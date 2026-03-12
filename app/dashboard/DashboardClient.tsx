@@ -31,8 +31,24 @@ type Props = {
     transactions: Transaction[];
 };
 
-const CATEGORIES = ["Alimentação", "Transporte", "Saúde", "Educação", "Lazer", "Moradia", "Salário", "Freelance", "Investimento", "Vendas", "Outros"];
-const LOW_BALANCE_THRESHOLD = 500;
+const EXPENSE_CATEGORIES = [
+    "Alimentação",
+    "Transporte",
+    "Saúde",
+    "Educação",
+    "Lazer",
+    "Moradia",
+    "Outros"
+];
+
+const INCOME_CATEGORIES = [
+    "Salário",
+    "Freelance",
+    "Investimento",
+    "Vendas",
+    "Outros"
+];
+
 const PAGE_SIZE = 15;
 
 export default function DashboardClient({ user, transactions: initial }: Props) {
@@ -43,20 +59,25 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [pageInput, setPageInput] = useState(page.toString());
-    const [form, setForm] = useState<TransactionForm>({
+    const initialForm: TransactionForm = {
         type: "income",
         amount: "",
         category: "",
         description: "",
         date: "",
-    });
-
+    };
+    const [form, setForm] = useState<TransactionForm>(initialForm);
     const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
     const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
     const balance = totalIncome - totalExpense;
     const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
     const paginatedTransactions = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-    
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setEditingId(null);
+        setForm(initialForm);
+      };
 
     useEffect(() => {
         setPageInput(page.toString());
@@ -98,44 +119,44 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
         return () => clearInterval(interval);
     }, [user.id]);
 
-    useEffect(() => {
-        const message = "Seu caixa está quase no fim. Considere entradas de receita em breve.";
+    // useEffect(() => {
+    //     const message = "Seu caixa está quase no fim. Considere entradas de receita em breve.";
 
-        const checkLowBalance = async () => {
-            if (balance <= LOW_BALANCE_THRESHOLD) {
+    //     const checkLowBalance = async () => {
+    //         if (balance <= LOW_BALANCE_THRESHOLD) {
 
-                if (!toast.isActive("low-balance")) {
-                    toast.warning(message, {
-                        toastId: "low-balance",
-                        position: "top-center",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        theme: "light",
-                    });
-                }
+    //             if (!toast.isActive("low-balance")) {
+    //                 toast.warning(message, {
+    //                     toastId: "low-balance",
+    //                     position: "top-center",
+    //                     autoClose: 5000,
+    //                     hideProgressBar: false,
+    //                     closeOnClick: true,
+    //                     pauseOnHover: true,
+    //                     draggable: true,
+    //                     theme: "light",
+    //                 });
+    //             }
 
-                const res = await fetch(`/api/alerts?userId=${user.id}`);
-                const data = await res.json();
+    //             const res = await fetch(`/api/alerts?userId=${user.id}`);
+    //             const data = await res.json();
 
-                const exists = data.alerts?.some(
-                    (a: { message: string; read: boolean }) => a.message === message && !a.read
-                );
+    //             const exists = data.alerts?.some(
+    //                 (a: { message: string; read: boolean }) => a.message === message && !a.read
+    //             );
 
-                if (!exists) {
-                    await fetch("/api/alerts", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ userId: user.id, message }),
-                    });
-                }
-            }
-        };
+    //             if (!exists) {
+    //                 await fetch("/api/alerts", {
+    //                     method: "POST",
+    //                     headers: { "Content-Type": "application/json" },
+    //                     body: JSON.stringify({ userId: user.id, message }),
+    //                 });
+    //             }
+    //         }
+    //     };
 
-        checkLowBalance();
-    }, [balance, user.id]);
+    //     checkLowBalance();
+    // }, [balance, user.id]);
 
     const chartData = useMemo(() => {
         const months: Record<string, { month: string; Receitas: number; Despesas: number }> = {};
@@ -228,6 +249,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
 
                 setEditingId(null);
                 setShowModal(false);
+                setForm(initialForm);
             }
         } finally {
             setLoading(false);
@@ -398,12 +420,16 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
 
             <CreateTransactionModal
                 open={showModal}
-                setOpen={setShowModal}
+                setOpen={handleCloseModal}
                 form={form}
                 setForm={setForm}
                 loading={loading}
                 handleSubmit={handleSubmit}
-                categories={CATEGORIES}
+                categories={
+                    form.type === "income"
+                        ? INCOME_CATEGORIES
+                        : EXPENSE_CATEGORIES
+                }
             />
         </div>
     );
