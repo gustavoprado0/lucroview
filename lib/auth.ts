@@ -43,8 +43,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        // Cria ou atualiza usuário Google no banco manualmente
-        await prisma.user.upsert({
+        const dbUser = await prisma.user.upsert({
           where: { email: user.email! },
           update: { name: user.name, image: user.image },
           create: {
@@ -53,20 +52,15 @@ export const authOptions: NextAuthOptions = {
             image: user.image,
           },
         });
+        user.id = dbUser.id;
       }
       return true;
     },
+
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-      }
-      // Para Google, busca o id real do banco
-      if (!token.id && token.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email as string },
-        });
-        if (dbUser) token.id = dbUser.id;
       }
       return token;
     },

@@ -6,8 +6,19 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { type, amount, category, description, date, userId } = body;
 
-    if (!type || !amount || !category || !userId) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!type || amount == null || !category || !userId) {
+      return NextResponse.json(
+        { error: "Missing required fields or invalid amount" },
+        { status: 400 }
+      );
+    }
+
+    const transactionDate = date ? new Date(date + "T00:00:00") : new Date();
+    if (isNaN(transactionDate.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid date format" },
+        { status: 400 }
+      );
     }
 
     const transaction = await prisma.transaction.create({
@@ -16,14 +27,19 @@ export async function POST(req: NextRequest) {
         amount,
         category,
         description,
-        date: date ? new Date(date + "T00:00:00") : new Date(),
+        date: transactionDate,
         userId,
       },
     });
 
     return NextResponse.json(transaction, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to create transaction" }, { status: 500 });
+
+  } catch (error: any) {
+    console.error("POST /api/transactions error:", error);
+
+    const message = error?.message || "Failed to create transaction";
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -41,7 +57,9 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ transactions });
-  } catch {
+
+  } catch (error) {
+    console.error("GET /api/transactions error:", error);
     return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 });
   }
 }
@@ -55,6 +73,8 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Transaction id required" }, { status: 400 });
     }
 
+    const transactionDate = date ? new Date(date) : undefined;
+
     const updated = await prisma.transaction.update({
       where: { id },
       data: {
@@ -62,13 +82,14 @@ export async function PUT(req: NextRequest) {
         amount,
         category,
         description,
-        date: date ? new Date(date) : undefined,
+        date: transactionDate,
       },
     });
 
     return NextResponse.json(updated);
+
   } catch (error) {
-    console.error(error);
+    console.error("PUT /api/transactions error:", error);
     return NextResponse.json({ error: "Failed to update transaction" }, { status: 500 });
   }
 }
@@ -86,8 +107,9 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
+
   } catch (error) {
-    console.error(error);
+    console.error("DELETE /api/transactions error:", error);
     return NextResponse.json({ error: "Failed to delete transaction" }, { status: 500 });
   }
 }
