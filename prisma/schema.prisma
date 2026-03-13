@@ -7,13 +7,13 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   name          String?
-  email         String   @unique
+  email         String    @unique
   password      String?
   emailVerified DateTime?
   image         String?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime  @default(now())
 
   bankBalance Float? @default(0)
 
@@ -23,6 +23,7 @@ model User {
 
   accounts Account[]
   sessions Session[]
+  goals    FinancialGoal[]
 }
 
 model Account {
@@ -88,9 +89,21 @@ model FinancialInsight {
   userId    String
   score     Int
   message   String
-  month     Int      @default(0)  
+  month     Int      @default(0)
   year      Int      @default(0)
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model FinancialGoal {
+  id        String    @id @default(uuid())
+  userId    String
+  name      String
+  target    Float
+  saved     Float     @default(0)
+  deadline  DateTime?
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }
