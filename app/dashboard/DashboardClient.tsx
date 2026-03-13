@@ -18,6 +18,7 @@ import ImportTransactionsButton from "@/components/transactions/ImportTransactio
 import { FinancialInsights } from "@/components/financial-insights/FinancialInsights";
 import EmptyDashboard from "@/components/EmptyDashboard";
 import { Transaction, TransactionForm } from "@/types/transaction";
+import FinancialGoalsCard from "@/components/financial-insights/FinancialGoalsCard";
 
 type User = {
     id: string;
@@ -370,7 +371,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                             userId={user.id}
                             setTransactions={setTransactions}
                             setPage={setPage}
-                            setPollingPaused={setPollingPaused} // <-- novo prop
+                            setPollingPaused={setPollingPaused}
                         />
 
                     </div>
@@ -388,7 +389,6 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                             fmt={fmt}
                         />
 
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                             <FinancialInsights
                                 balance={balance}
                                 totalIncome={totalIncome}
@@ -396,15 +396,17 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                                 fmt={fmt}
                             />
 
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                             <ForecastCard
                                 forecast={forecast}
                                 fmt={fmt}
                             />
 
+                            <FinancialGoalsCard userId={user.id} />
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
 
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                             <IncomeExpenseChart
                                 chartData={chartData}
                                 tooltipStyle={tooltipStyle}
