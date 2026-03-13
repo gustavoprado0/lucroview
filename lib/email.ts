@@ -1,16 +1,17 @@
 import { Resend } from "resend";
 
-const apiKey = process.env.RESEND_API_KEY;
-
-if (!apiKey) {
-    throw new Error("RESEND_API_KEY não está definida");
-}
-
-const resend = new Resend(apiKey);
-
 export async function sendResetPasswordEmail(email: string, token: string) {
     try {
-        const resetLink = `https://lucroview.com.br/reset-password?token=${token}`;
+        const apiKey = process.env.RESEND_API_KEY;
+
+        if (!apiKey) {
+            console.error("RESEND_API_KEY não está definida");
+            return;
+        }
+
+        const resend = new Resend(apiKey);
+
+        const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
 
         const response = await resend.emails.send({
             from: "LucroView <suporte@lucroview.com.br>",
