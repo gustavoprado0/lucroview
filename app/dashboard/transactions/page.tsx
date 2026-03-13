@@ -33,7 +33,6 @@ const INCOME_CATEGORIES = [
 ];
 
 export default function TransactionsPage() {
-
   const { data: session } = useSession();
   const user = session?.user;
 
@@ -44,7 +43,6 @@ export default function TransactionsPage() {
 
   const [page, setPage] = useState(1);
   const [pageInput, setPageInput] = useState(page.toString());
-
   const [pollingPaused, setPollingPaused] = useState(false);
 
   const initialForm: TransactionForm = {
@@ -72,7 +70,6 @@ export default function TransactionsPage() {
             ...t,
             type: t.type as "income" | "expense",
           }));
-
           setTransactions(normalized);
         }
       } catch (err) {
@@ -81,11 +78,8 @@ export default function TransactionsPage() {
     };
 
     fetchTransactions();
-
     const interval = setInterval(fetchTransactions, 5000);
-
     return () => clearInterval(interval);
-
   }, [user?.id, pollingPaused]);
 
   const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
@@ -96,21 +90,15 @@ export default function TransactionsPage() {
   );
 
   const fmt = (v: number) =>
-    v.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
+    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const handlePageSubmit = () => {
     const pageNumber = Number(pageInput);
-
     if (isNaN(pageNumber)) {
       setPageInput(page.toString());
       return;
     }
-
     const validPage = Math.min(Math.max(1, pageNumber), totalPages);
-
     setPage(validPage);
   };
 
@@ -134,12 +122,8 @@ export default function TransactionsPage() {
 
       const res = await fetch("/api/transactions", {
         method: editingId ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(
-          editingId ? { ...payload, id: editingId } : payload
-        ),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingId ? { ...payload, id: editingId } : payload),
       });
 
       if (res.ok) {
@@ -157,21 +141,16 @@ export default function TransactionsPage() {
         setShowModal(false);
         setForm(initialForm);
       }
-
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-
     const confirmDelete = confirm("Deseja deletar esta transação?");
-
     if (!confirmDelete) return;
 
-    const res = await fetch(`/api/transactions?id=${id}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(`/api/transactions?id=${id}`, { method: "DELETE" });
 
     if (res.ok) {
       setTransactions((prev) => prev.filter((t) => t.id !== id));
@@ -180,9 +159,7 @@ export default function TransactionsPage() {
   };
 
   const handleEdit = (tx: Transaction) => {
-
     setEditingId(tx.id);
-
     setForm({
       type: tx.type,
       amount: tx.amount.toString(),
@@ -190,32 +167,27 @@ export default function TransactionsPage() {
       description: tx.description || "",
       date: new Date(tx.date).toISOString().split("T")[0],
     });
-
     setShowModal(true);
   };
 
   if (!user) return null;
 
   return (
-    <div className="w-full px-6 py-6 space-y-6">
+    <div className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
-      <div className="flex items-center justify-between">
-
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">
-            Transações
-          </h1>
-
-          <p className="text-gray-500 text-sm">
+          <h1 className="text-xl sm:text-2xl font-bold">Transações</h1>
+          <p className="text-gray-500 text-xs sm:text-sm">
             Gerencie suas receitas e despesas
           </p>
         </div>
 
-        <div className="flex gap-3">
-
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <Button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             Nova Transação
@@ -227,23 +199,25 @@ export default function TransactionsPage() {
             setPage={setPage}
             setPollingPaused={setPollingPaused}
           />
-
         </div>
       </div>
 
-      <TransactionsTable
-        transactions={transactions}
-        paginatedTransactions={paginatedTransactions}
-        page={page}
-        totalPages={totalPages}
-        pageInput={pageInput}
-        setPageInput={setPageInput}
-        setPage={setPage}
-        handlePageSubmit={handlePageSubmit}
-        fmt={fmt}
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-      />
+      {/* Tabela com scroll horizontal no mobile */}
+      <div className="w-full overflow-x-auto rounded-lg">
+        <TransactionsTable
+          transactions={transactions}
+          paginatedTransactions={paginatedTransactions}
+          page={page}
+          totalPages={totalPages}
+          pageInput={pageInput}
+          setPageInput={setPageInput}
+          setPage={setPage}
+          handlePageSubmit={handlePageSubmit}
+          fmt={fmt}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+        />
+      </div>
 
       <CreateTransactionModal
         open={showModal}
@@ -252,13 +226,8 @@ export default function TransactionsPage() {
         setForm={setForm}
         loading={loading}
         handleSubmit={handleSubmit}
-        categories={
-          form.type === "income"
-            ? INCOME_CATEGORIES
-            : EXPENSE_CATEGORIES
-        }
+        categories={form.type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES}
       />
-
     </div>
   );
 }
