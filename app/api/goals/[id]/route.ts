@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(req: NextRequest) {
   const id = req.nextUrl.pathname.split("/").pop();
-
   const { name, target, deadline, saved } = await req.json();
 
   if (!id) {
@@ -21,12 +20,6 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  let diff = 0;
-
-  if (saved !== undefined) {
-    diff = Number(saved) - goal.saved;
-  }
-
   await prisma.$transaction([
     prisma.financialGoal.update({
       where: { id },
@@ -40,19 +33,21 @@ export async function PUT(req: NextRequest) {
       },
     }),
 
-    ...(diff !== 0
+    ...(saved !== undefined
       ? [
-        prisma.transaction.create({
-          data: {
-            userId: goal.userId,
-            type: diff > 0 ? "expense" : "income",
-            amount: Math.abs(diff),
-            category: "Objetivo",
-            description: `Ajuste manual objetivo: ${goal.name}`,
-            date: new Date(),
-          },
-        }),
-      ]
+          prisma.transaction.updateMany({
+            where: {
+              userId: goal.userId,
+              category: "Objetivo",
+              description: {
+                contains: goal.name,
+              },
+            },
+            data: {
+              amount: Number(saved),
+            },
+          }),
+        ]
       : []),
   ]);
 
