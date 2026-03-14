@@ -1,6 +1,9 @@
 "use client";
 
 import { CalendarIcon, DollarSign, TrendingDown } from "lucide-react";
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+
 import {
   Dialog,
   DialogContent,
@@ -21,8 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+
+dayjs.locale("pt-br");
 
 type FormType = {
   type: "income" | "expense";
@@ -41,6 +44,26 @@ type Props = {
   handleSubmit: () => void;
   categories: string[];
 };
+
+function formatPretty(date?: string) {
+  if (!date) return null;
+
+  const d = dayjs(date);
+
+  if (!d.isValid()) return null;
+
+  return d.format("D [de] MMMM [de] YYYY");
+}
+
+function stringToDate(date?: string) {
+  if (!date) return undefined;
+
+  const d = dayjs(date);
+
+  if (!d.isValid()) return undefined;
+
+  return d.toDate();
+}
 
 export default function CreateTransactionModal({
   open,
@@ -70,7 +93,7 @@ export default function CreateTransactionModal({
                 setForm((f) => ({
                   ...f,
                   type: opt.value as "income" | "expense",
-                  category: ""
+                  category: "",
                 }))
               }
               className={`py-2.5 cursor-pointer rounded-xl text-sm font-medium transition border flex items-center justify-center gap-2
@@ -104,7 +127,7 @@ export default function CreateTransactionModal({
             }
           >
             <SelectTrigger className="w-full cursor-pointer">
-              <SelectValue className="cursor-pointer" placeholder="Categoria" />
+              <SelectValue placeholder="Categoria" />
             </SelectTrigger>
 
             <SelectContent>
@@ -133,7 +156,7 @@ export default function CreateTransactionModal({
                 <CalendarIcon className="mr-2 h-4 w-4" />
 
                 {form.date
-                  ? format(new Date(form.date), "PPP", { locale: ptBR })
+                  ? formatPretty(form.date)
                   : "Selecionar data"}
               </Button>
             </PopoverTrigger>
@@ -141,24 +164,36 @@ export default function CreateTransactionModal({
             <PopoverContent className="w-auto p-0">
               <Calendar
                 mode="single"
-                selected={form.date ? new Date(form.date) : undefined}
-                onSelect={(date) =>
+                selected={stringToDate(form.date)}
+                onSelect={(date) => {
+                  if (!date) return;
+
+                  const formatted = dayjs(date).format("YYYY-MM-DD");
+
                   setForm((f) => ({
                     ...f,
-                    date: date ? format(date, "yyyy-MM-dd") : "",
-                  }))
-                }
+                    date: formatted,
+                  }));
+                }}
               />
             </PopoverContent>
           </Popover>
         </div>
 
         <DialogFooter>
-          <Button className="cursor-pointer" variant="outline" onClick={() => setOpen(false)}>
+          <Button
+            className="cursor-pointer"
+            variant="outline"
+            onClick={() => setOpen(false)}
+          >
             Cancelar
           </Button>
 
-          <Button className="cursor-pointer" onClick={handleSubmit} disabled={loading}>
+          <Button
+            className="cursor-pointer bg-green-500 hover:bg-green-600"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
             {loading ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

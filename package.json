@@ -19,6 +19,8 @@
     "clsx": "^2.1.1",
     "csv-parse": "^6.1.0",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.20",
+    "dayjs-plugin-utc": "^0.1.2",
     "formidable": "^3.5.4",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.576.0",
@@ -36,6 +38,7 @@
     "react-toastify": "^11.0.5",
     "recharts": "^3.7.0",
     "resend": "^6.9.3",
+    "stripe": "^20.4.1",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

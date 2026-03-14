@@ -17,6 +17,7 @@ import EmptyDashboard from "@/components/EmptyDashboard";
 import CreateTransactionModal from "@/components/transactions/TransactionModal";
 
 import { Transaction, TransactionForm } from "@/types/transaction";
+import SubscribeButton from "@/components/SubscribeButton";
 
 type User = {
     id: string;
@@ -299,9 +300,7 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
             <ToastContainer />
 
             <div className="w-full px-4 sm:px-6 pb-8 space-y-6">
-
                 <div className="mt-5">
-
                     <h1 className="text-xl sm:text-2xl font-bold">
                         Dashboard
                     </h1>
@@ -309,6 +308,12 @@ export default function DashboardClient({ user, transactions: initial }: Props) 
                     <p className="text-gray-600 text-sm mt-0.5">
                         Visão geral das suas finanças
                     </p>
+
+                    {/* <SubscribeButton
+                        priceId="price_1TAhngQ03zJblkH6RG9GlKI8"
+                        label="Assinar Mensal"
+                        email={user.email ?? ''}
+                    /> */}
 
                 </div>
 

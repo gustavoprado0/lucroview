@@ -23,7 +23,7 @@ export default function EmptyDashboard({ onCreate }: Props) {
 
         <Button
           onClick={onCreate}
-          className="mt-4 mx-auto flex items-center gap-2 bg-green-600 hover:bg-green-500 cursor-pointer"
+          className="mt-4 mx-auto flex items-center gap-2 bg-green-600 hover:bg-green-700 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Criar primeira transação

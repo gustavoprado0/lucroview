@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 function ResetPasswordContent() {
   const params = useSearchParams();
-  const token = params.get("token");
+  const token = params?.get("token") ?? null;
   const [password, setPassword] = useState("");
 
   const handleReset = async () => {

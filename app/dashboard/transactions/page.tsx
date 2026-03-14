@@ -11,6 +11,7 @@ import CreateTransactionModal from "@/components/transactions/TransactionModal";
 import ImportTransactionsButton from "@/components/transactions/ImportTransactionsButton";
 
 import { Transaction, TransactionForm } from "@/types/transaction";
+import SubscribeButton from "@/components/SubscribeButton";
 
 const PAGE_SIZE = 15;
 
@@ -175,7 +176,6 @@ export default function TransactionsPage() {
   return (
     <div className="w-full px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
-      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">Transações</h1>
@@ -187,7 +187,7 @@ export default function TransactionsPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <Button
             onClick={() => setShowModal(true)}
-            className="flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer bg-green-600 hover:bg-green-700"
           >
             <Plus className="w-4 h-4" />
             Nova Transação
@@ -202,21 +202,26 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* Tabela com scroll horizontal no mobile */}
       <div className="w-full overflow-x-auto rounded-lg">
-        <TransactionsTable
-          transactions={transactions}
-          paginatedTransactions={paginatedTransactions}
-          page={page}
-          totalPages={totalPages}
-          pageInput={pageInput}
-          setPageInput={setPageInput}
-          setPage={setPage}
-          handlePageSubmit={handlePageSubmit}
-          fmt={fmt}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-        />
+        {transactions.length === 0 ? (
+          <div className="w-full text-center py-10 text-gray-500">
+            Nenhuma transação cadastrada ainda.
+          </div>
+        ) : (
+          <TransactionsTable
+            transactions={transactions}
+            paginatedTransactions={paginatedTransactions}
+            page={page}
+            totalPages={totalPages}
+            pageInput={pageInput}
+            setPageInput={setPageInput}
+            setPage={setPage}
+            handlePageSubmit={handlePageSubmit}
+            fmt={fmt}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+          />
+        )}
       </div>
 
       <CreateTransactionModal
