@@ -148,7 +148,7 @@ export default function GoalsPage() {
 
   const updateSaved = async () => {
     if (!editingSavedGoal || !editSaved) return;
-  
+
     await fetch(`/api/goals/${editingSavedGoal}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -156,10 +156,10 @@ export default function GoalsPage() {
         saved: Number(editSaved),
       }),
     });
-  
+
     setEditSaved("");
     setEditingSavedGoal(null);
-  
+
     await fetchGoals();
     await fetch("/api/revalidate-transactions", { method: "POST" });
   };
@@ -276,7 +276,7 @@ export default function GoalsPage() {
 
                   <Progress value={progress} />
 
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
